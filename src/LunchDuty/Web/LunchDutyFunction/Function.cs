@@ -13,7 +13,6 @@ using Microsoft.Azure.WebJobs.Host;
 using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json;
 
-
 namespace LunchDutyFunction
 {
 	public static class Function
