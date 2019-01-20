@@ -17,6 +17,8 @@ namespace LunchDutyFunction
 {
 	public static class Function
 	{
+		private static readonly SlackAPI slack = new SlackAPI();
+
 		private static IConfigurationRoot Configuration { get; }
 
 		static Function()
@@ -31,13 +33,9 @@ namespace LunchDutyFunction
 		[FunctionName("Duty")]
 		public static void Run([TimerTrigger("0 0 1 * * 1-5")]TimerInfo myTimer, TraceWriter log)
 		{
-			var slack = new SlackAPI();
-
 			var members = slack.GetMembers().ToList();
 
-			var names = slack.GetNames(members).ToList();
-
-			string duty = GetDuty(names);
+			string duty = GetDuty(members);
 
 			string message = GetMessage(duty);
 
@@ -58,7 +56,7 @@ namespace LunchDutyFunction
 		{
 			private const string SLACK_API_BASE = "https://slack.com/api";
 
-			private HttpClient client = new HttpClient() { BaseAddress = new Uri(SLACK_API_BASE) };
+			private readonly HttpClient client = new HttpClient() { BaseAddress = new Uri(SLACK_API_BASE) };
 
 			internal IEnumerable<string> GetMembers()
 			{
@@ -80,38 +78,6 @@ namespace LunchDutyFunction
 				foreach (dynamic member in jo.channel.members)
 				{
 					yield return member;
-				}
-			}
-
-			internal IEnumerable<string> GetNames(List<string> members)
-			{
-				dynamic GetNameRequest(string member)
-				{
-					string query = CreateGetContent(
-						token => Configuration["SlackToken"],
-						user => member
-						);
-
-					HttpResponseMessage response = client.GetAsync(new UriBuilder(Path.Combine(SLACK_API_BASE, "users.info"))
-					{
-						Query = query
-					}.ToString()).Result;
-
-					string json = response.Content.ReadAsStringAsync().Result;
-
-					dynamic jo = JsonConvert.DeserializeObject<dynamic>(json);
-
-					return jo.user;
-				}
-
-				foreach (string m in members)
-				{
-					dynamic user = GetNameRequest(m);
-
-					if (!(bool)user.is_bot)
-					{
-						yield return user.id;
-					}
 				}
 			}
 
