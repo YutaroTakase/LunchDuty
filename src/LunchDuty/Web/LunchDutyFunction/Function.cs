@@ -13,6 +13,7 @@ using Microsoft.Azure.WebJobs.Host;
 using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json;
 
+
 namespace LunchDutyFunction
 {
 	public static class Function
@@ -49,7 +50,7 @@ namespace LunchDutyFunction
 
 		private static string GetMessage(string name)
 		{
-			return $@"–{“ú‚Ì‹‹H“–”Ô‚Í <@{name}> ‚³‚ñ‚Å‚·I";
+			return $@"æœ¬æ—¥ã®çµ¦é£Ÿå½“ç•ªã¯ <@{name}> ã•ã‚“ã§ã™ï¼";
 		}
 
 		private class SlackAPI
@@ -83,7 +84,7 @@ namespace LunchDutyFunction
 
 			internal void Send(string message)
 			{
-				const string username = "‹‹H“–”Ôbot";
+				const string username = "çµ¦é£Ÿå½“ç•ªbot";
 				const string iconEmoji = "";
 
 				string json = JsonConvert.SerializeObject(new
