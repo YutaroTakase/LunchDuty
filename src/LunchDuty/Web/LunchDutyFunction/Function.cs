@@ -35,6 +35,8 @@ namespace LunchDutyFunction
 		{
 			var members = slack.GetMembers().ToList();
 
+			log.Info("member count = " + members.Count);
+
 			string duty = GetDuty(members);
 
 			string message = GetMessage(duty);
