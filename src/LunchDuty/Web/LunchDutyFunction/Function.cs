@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.IO;
@@ -9,13 +9,13 @@ using System.Net.Http;
 using System.Text;
 using System.Web;
 using Microsoft.Azure.WebJobs;
-using Microsoft.Azure.WebJobs.Host;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 
 namespace LunchDutyFunction
 {
-	public static class Function
+    public static class Function
 	{
 		private static readonly SlackAPI slack = new SlackAPI();
 
@@ -31,11 +31,11 @@ namespace LunchDutyFunction
 		}
 
 		[FunctionName("Duty")]
-		public static void Run([TimerTrigger("0 0 1 * * 1-5")]TimerInfo myTimer, TraceWriter log)
+		public static void Run([TimerTrigger("0 0 1 * * 1-5")]TimerInfo myTimer, ILogger log)
 		{
 			var members = slack.GetMembers().ToList();
 
-			log.Info("member count = " + members.Count);
+			log.LogInformation("member count = " + members.Count);
 
 			string duty = GetDuty(members);
 
@@ -46,7 +46,7 @@ namespace LunchDutyFunction
 
 		private static string GetDuty(List<string> members)
 		{
-			return members[new Random().Next(0, members.Count)];
+			return members[new Random((int)DateTimeOffset.Now.Ticks).Next(0, members.Count)];
 		}
 
 		private static string GetMessage(string name)
