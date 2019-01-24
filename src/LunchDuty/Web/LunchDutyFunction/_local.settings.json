@@ -5,6 +5,7 @@
     "AzureWebJobsDashboard": "",
     "SlackToken": "",
     "SlackChannel": "",
-    "WebHook": ""
+    "WebHook": "",
+    "GoogleCalendarAPIKey":  ""
   }
 } 
