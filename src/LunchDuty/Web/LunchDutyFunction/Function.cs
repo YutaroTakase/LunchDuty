@@ -12,6 +12,7 @@ using Microsoft.Azure.WebJobs;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace LunchDutyFunction
 {
@@ -35,6 +36,12 @@ namespace LunchDutyFunction
 		public static void Run([TimerTrigger("0 0 1 * * 1-5")]TimerInfo myTimer, ILogger log)
 		{
             logger = log;
+
+            if (IsHoliday(DateTimeOffset.Now))
+            {
+                logger.LogInformation("holiday");
+                //return;
+            }
 
 			var members = slack.GetMembers().ToList();
 
@@ -60,6 +67,35 @@ namespace LunchDutyFunction
 		{
 			return $@"本日の給食当番は <@{name}> さんです！";
 		}
+		
+		private static bool IsHoliday(DateTimeOffset date)
+		{
+            try
+            {
+                var today = new DateTime(date.Year, date.Month, date.Day).ToString("yyyy-MM-dd") + "T00%3A00%3A00.000Z";
+
+                var key = Configuration["GoogleCalendarAPIKey"];
+                var holidaysId = "japanese__ja@holiday.calendar.google.com";
+                var startDate = today;
+                var endDate = today;
+                var maxCount = 30;
+
+                var url = $"https://www.googleapis.com/calendar/v3/calendars/{holidaysId}/events?key={key}&timeMin={startDate}&timeMax={endDate}&maxResults={maxCount}&orderBy=startTime&singleEvents=true";
+                using (var client = new WebClient() { Encoding = Encoding.UTF8 })
+                {
+                    var json = client.DownloadString(url);
+                    var o = JObject.Parse(json);
+                    IEnumerable<DateTimeOffset> days = o["items"].Select(i => DateTimeOffset.Parse(i["start"]["date"].ToString()));
+
+                    return days.Count() > 0 ? true : false;
+                }
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex.ToString());
+                return false;
+            }
+        }
 
 		private class SlackAPI
 		{
