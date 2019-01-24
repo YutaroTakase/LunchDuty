@@ -18,6 +18,7 @@ namespace LunchDutyFunction
     public static class Function
 	{
 		private static readonly SlackAPI slack = new SlackAPI();
+        private static ILogger logger;
 
 		private static IConfigurationRoot Configuration { get; }
 
@@ -33,9 +34,11 @@ namespace LunchDutyFunction
 		[FunctionName("Duty")]
 		public static void Run([TimerTrigger("0 0 1 * * 1-5")]TimerInfo myTimer, ILogger log)
 		{
+            logger = log;
+
 			var members = slack.GetMembers().ToList();
 
-			log.LogInformation("member count = " + members.Count);
+			log.LogInformation($"member count = {members.Count}");
 
 			string duty = GetDuty(members);
 
@@ -46,7 +49,11 @@ namespace LunchDutyFunction
 
 		private static string GetDuty(List<string> members)
 		{
-			return members[new Random((int)DateTimeOffset.Now.Ticks).Next(0, members.Count)];
+            var ticks = (int)DateTimeOffset.Now.Ticks;
+
+            logger.LogInformation($"ticks = {ticks}");
+
+            return members[new Random(ticks).Next(0, members.Count)];
 		}
 
 		private static string GetMessage(string name)
@@ -95,11 +102,11 @@ namespace LunchDutyFunction
 					icon_emoji = iconEmoji
 				});
 
-				using (var client = new WebClient())
+				using (var webClient = new WebClient())
 				{
-					client.Headers.Add(HttpRequestHeader.ContentType, "application/json;charset=UTF-8");
-					client.Encoding = Encoding.UTF8;
-					client.UploadString(new Uri(Configuration["WebHook"]), json);
+					webClient.Headers.Add(HttpRequestHeader.ContentType, "application/json;charset=UTF-8");
+					webClient.Encoding = Encoding.UTF8;
+					webClient.UploadString(new Uri(Configuration["WebHook"]), json);
 				}
 			}
 
